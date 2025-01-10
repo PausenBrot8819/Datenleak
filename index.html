@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Mail & Passwort Leak Check</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
+        input, button { padding: 10px; margin: 10px; width: 80%; max-width: 400px; }
+        #result { margin-top: 20px; text-align: left; max-width: 600px; margin: auto; }
+    </style>
+</head>
+<body>
+    <h2>Prüfe, ob deine E-Mail oder dein Passwort geleakt wurde</h2>
+    <input type="email" id="email" placeholder="E-Mail-Adresse eingeben">
+    <input type="password" id="password" placeholder="Optional: Passwort prüfen">
+    <button onclick="checkLeaks()">Prüfen</button>
+    <div id="result"></div>
+
+    <script>
+        async function checkLeaks() {
+            let email = document.getElementById("email").value.trim();
+            let password = document.getElementById("password").value.trim();
+            let resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = "<p>🔍 Überprüfung läuft...</p>";
+            let responseHTML = "<h3>Ergebnisse:</h3>";
+
+            // **1. E-Mail Leak Check über alternative API (keine API-Key nötig)**
+            if (email) {
+                try {
+                    let emailResponse = await fetch(`https://hacked-emails.com/api?q=${encodeURIComponent(email)}`);
+                    let emailData = await emailResponse.json();
+                    if (emailData.status === "found") {
+                        let leaks = emailData.data.map(entry => entry.title).join(", ");
+                        responseHTML += `<p style='color: red;'>⚠ Deine E-Mail wurde in diesen Leaks gefunden: ${leaks}</p>`;
+                    } else {
+                        responseHTML += `<p style='color: green;'>✅ Deine E-Mail wurde nicht gefunden.</p>`;
+                    }
+                } catch (error) {
+                    responseHTML += `<p style='color: gray;'>❓ Keine Daten für die E-Mail verfügbar.</p>`;
+                }
+            }
+
+            // **2. Passwort Leak Check mit Pwned Password API**
+            if (password) {
+                let hash = await sha1(password);
+                let prefix = hash.slice(0, 5);
+                try {
+                    let passwordResponse = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+                    let data = await passwordResponse.text();
+                    let leakedPassword = data.split("\n").find(line => line.startsWith(hash.slice(5).toUpperCase()));
+                    if (leakedPassword) {
+                        let count = leakedPassword.split(":")[1];
+                        responseHTML += `<p style='color: red;'>⚠ Dein Passwort wurde ${count} mal in Leaks gefunden!</p>`;
+                    } else {
+                        responseHTML += `<p style='color: green;'>✅ Dein Passwort wurde nicht in Leaks gefunden.</p>`;
+                    }
+                } catch (error) {
+                    responseHTML += `<p style='color: gray;'>❓ Keine Daten für das Passwort verfügbar.</p>`;
+                }
+            }
+
+            resultDiv.innerHTML = responseHTML;
+        }
+
+        // **SHA1 Hash Funktion für Passwortprüfung**
+        async function sha1(str) {
+            const buffer = new TextEncoder("utf-8").encode(str);
+            const hashBuffer = await crypto.subtle.digest("SHA-1", buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+        }
+    </script>
+</body>
+</html>
