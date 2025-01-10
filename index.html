@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Mail & Passwort Leak Check</title>
     <style>
-        /* Dark Mode Design */
+        /* 🌑 Dark Mode Styling */
         body {
             background-color: #121212;
             color: #ffffff;
@@ -13,34 +13,48 @@
             text-align: center;
             margin: 50px;
         }
-        input, button {
-            padding: 10px;
-            margin: 10px;
-            width: 80%;
+        .container {
             max-width: 400px;
-            background-color: #333;
-            border: 1px solid #444;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        input {
+            width: calc(100% - 40px);
+            padding: 12px;
+            margin: 10px;
+            background-color: #1e1e1e;
+            border: 1px solid #333;
             color: white;
+            border-radius: 5px;
+            font-size: 16px;
+            outline: none;
+            display: block;
+            text-align: left;
         }
         button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background-color: #333;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
             cursor: pointer;
-            background-color: #444;
         }
         button:hover {
-            background-color: #666;
+            background-color: #444;
         }
         #result {
             margin-top: 20px;
             text-align: left;
-            max-width: 600px;
-            margin: auto;
             font-size: 16px;
         }
         .password-container {
             position: relative;
-            display: inline-block;
-            width: 80%;
-            max-width: 400px;
+            display: flex;
+            align-items: center;
         }
         .password-container input {
             width: 100%;
@@ -48,11 +62,10 @@
         }
         .toggle-password {
             position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
+            right: 15px;
             cursor: pointer;
-            color: #ccc;
+            font-size: 20px;
+            color: #aaa;
         }
         .toggle-password:hover {
             color: #fff;
@@ -60,23 +73,33 @@
     </style>
 </head>
 <body>
-    <h2>🔍 Prüfe, ob deine E-Mail oder dein Passwort geleakt wurde</h2>
 
-    <input type="email" id="email" placeholder="E-Mail-Adresse eingeben">
-    
-    <div class="password-container">
-        <input type="password" id="password" placeholder="Optional: Passwort prüfen">
-        <span class="toggle-password" onclick="togglePassword()">👁️</span>
+    <div class="container">
+        <h2>🔍 Prüfe, ob deine E-Mail oder dein Passwort geleakt wurde</h2>
+
+        <input type="email" id="email" placeholder="E-Mail-Adresse eingeben">
+        
+        <div class="password-container">
+            <input type="password" id="password" placeholder="Optional: Passwort prüfen">
+            <span class="toggle-password" onclick="togglePassword()">👁️</span>
+        </div>
+
+        <button onclick="checkLeaks()">Prüfen</button>
+        
+        <div id="result"></div>
     </div>
-
-    <button onclick="checkLeaks()">Prüfen</button>
-    
-    <div id="result"></div>
 
     <script>
         function togglePassword() {
             let passwordInput = document.getElementById("password");
-            passwordInput.type = (passwordInput.type === "password") ? "text" : "password";
+            let eyeIcon = document.querySelector(".toggle-password");
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                eyeIcon.innerHTML = "🙈"; // Durchgestrichenes Auge für "sichtbar"
+            } else {
+                passwordInput.type = "password";
+                eyeIcon.innerHTML = "👁️"; // Offenes Auge für "versteckt"
+            }
         }
 
         async function checkLeaks() {
@@ -95,7 +118,7 @@
                 responseHTML += `<p>📌 Suche nach Leaks auf <a href="${pastebinSearchURL}" target="_blank">Pastebin</a></p>`;
             }
 
-            // **2. Passwort Leak Check mit Have I Been Pwned API (ohne API-Schlüssel)**
+            // **2. Passwort Leak Check mit Pwned Password API (ohne API-Schlüssel)**
             if (password) {
                 let hash = await sha1(password);
                 let prefix = hash.slice(0, 5);
@@ -125,5 +148,6 @@
             return hashArray.map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
         }
     </script>
+
 </body>
 </html>
