@@ -109,16 +109,23 @@
             resultDiv.innerHTML = "<p>🔍 Überprüfung läuft...</p>";
             let responseHTML = "<h3>Ergebnisse:</h3>";
 
-            // **1. E-Mail Leak Check mit frei verfügbaren Quellen (Google & Pastebin Suche)**
+            // **1. E-Mail Leak Check mit frei zugänglichen Quellen**
             if (email) {
-                let googleSearchURL = `https://www.google.com/search?q=${encodeURIComponent(email)}+leaked+data+breach`;
-                let pastebinSearchURL = `https://www.google.com/search?q=site:pastebin.com+${encodeURIComponent(email)}`;
-
-                responseHTML += `<p>📌 Suche nach Leaks auf <a href="${googleSearchURL}" target="_blank">Google</a></p>`;
-                responseHTML += `<p>📌 Suche nach Leaks auf <a href="${pastebinSearchURL}" target="_blank">Pastebin</a></p>`;
+                try {
+                    let emailCheck = await fetch(`https://leakcheck.net/api/public?check=${encodeURIComponent(email)}`);
+                    let emailData = await emailCheck.json();
+                    if (emailData.found) {
+                        let leaks = emailData.sources.map(entry => entry.name).join(", ");
+                        responseHTML += `<p style='color: red;'>⚠ Deine E-Mail wurde in diesen Leaks gefunden: ${leaks}</p>`;
+                    } else {
+                        responseHTML += `<p style='color: green;'>✅ Deine E-Mail wurde nicht gefunden.</p>`;
+                    }
+                } catch (error) {
+                    responseHTML += `<p style='color: gray;'>❓ Keine Daten für die E-Mail verfügbar.</p>`;
+                }
             }
 
-            // **2. Passwort Leak Check mit Pwned Password API (ohne API-Schlüssel)**
+            // **2. Passwort Leak Check mit Have I Been Pwned (ohne API-Schlüssel)**
             if (password) {
                 let hash = await sha1(password);
                 let prefix = hash.slice(0, 5);
