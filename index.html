@@ -5,19 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Mail & Passwort Leak Check</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
-        input, button { padding: 10px; margin: 10px; width: 80%; max-width: 400px; }
-        #result { margin-top: 20px; text-align: left; max-width: 600px; margin: auto; }
+        /* Dark Mode Design */
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            width: 80%;
+            max-width: 400px;
+            background-color: #333;
+            border: 1px solid #444;
+            color: white;
+        }
+        button {
+            cursor: pointer;
+            background-color: #444;
+        }
+        button:hover {
+            background-color: #666;
+        }
+        #result {
+            margin-top: 20px;
+            text-align: left;
+            max-width: 600px;
+            margin: auto;
+            font-size: 16px;
+        }
+        .password-container {
+            position: relative;
+            display: inline-block;
+            width: 80%;
+            max-width: 400px;
+        }
+        .password-container input {
+            width: 100%;
+            padding-right: 40px;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #ccc;
+        }
+        .toggle-password:hover {
+            color: #fff;
+        }
     </style>
 </head>
 <body>
-    <h2>Prüfe, ob deine E-Mail oder dein Passwort geleakt wurde</h2>
+    <h2>🔍 Prüfe, ob deine E-Mail oder dein Passwort geleakt wurde</h2>
+
     <input type="email" id="email" placeholder="E-Mail-Adresse eingeben">
-    <input type="password" id="password" placeholder="Optional: Passwort prüfen">
+    
+    <div class="password-container">
+        <input type="password" id="password" placeholder="Optional: Passwort prüfen">
+        <span class="toggle-password" onclick="togglePassword()">👁️</span>
+    </div>
+
     <button onclick="checkLeaks()">Prüfen</button>
+    
     <div id="result"></div>
 
     <script>
+        function togglePassword() {
+            let passwordInput = document.getElementById("password");
+            passwordInput.type = (passwordInput.type === "password") ? "text" : "password";
+        }
+
         async function checkLeaks() {
             let email = document.getElementById("email").value.trim();
             let password = document.getElementById("password").value.trim();
@@ -25,23 +86,16 @@
             resultDiv.innerHTML = "<p>🔍 Überprüfung läuft...</p>";
             let responseHTML = "<h3>Ergebnisse:</h3>";
 
-            // **1. E-Mail Leak Check über alternative API (keine API-Key nötig)**
+            // **1. E-Mail Leak Check mit frei verfügbaren Quellen (Google & Pastebin Suche)**
             if (email) {
-                try {
-                    let emailResponse = await fetch(`https://hacked-emails.com/api?q=${encodeURIComponent(email)}`);
-                    let emailData = await emailResponse.json();
-                    if (emailData.status === "found") {
-                        let leaks = emailData.data.map(entry => entry.title).join(", ");
-                        responseHTML += `<p style='color: red;'>⚠ Deine E-Mail wurde in diesen Leaks gefunden: ${leaks}</p>`;
-                    } else {
-                        responseHTML += `<p style='color: green;'>✅ Deine E-Mail wurde nicht gefunden.</p>`;
-                    }
-                } catch (error) {
-                    responseHTML += `<p style='color: gray;'>❓ Keine Daten für die E-Mail verfügbar.</p>`;
-                }
+                let googleSearchURL = `https://www.google.com/search?q=${encodeURIComponent(email)}+leaked+data+breach`;
+                let pastebinSearchURL = `https://www.google.com/search?q=site:pastebin.com+${encodeURIComponent(email)}`;
+
+                responseHTML += `<p>📌 Suche nach Leaks auf <a href="${googleSearchURL}" target="_blank">Google</a></p>`;
+                responseHTML += `<p>📌 Suche nach Leaks auf <a href="${pastebinSearchURL}" target="_blank">Pastebin</a></p>`;
             }
 
-            // **2. Passwort Leak Check mit Pwned Password API**
+            // **2. Passwort Leak Check mit Have I Been Pwned API (ohne API-Schlüssel)**
             if (password) {
                 let hash = await sha1(password);
                 let prefix = hash.slice(0, 5);
